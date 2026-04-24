@@ -2,6 +2,9 @@ const CACHE_NAME = 'blue-wing-v1';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/favicon.ico',
 ];
 
 // Install — cache static assets

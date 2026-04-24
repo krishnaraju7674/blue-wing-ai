@@ -2,9 +2,10 @@
 
 import { useRef, useEffect, useState } from 'react';
 
-export default function VisionFeed() {
+export default function VisionFeed({ onAnalyze }) {
   const videoRef = useRef(null);
   const [active, setActive] = useState(false);
+  const [scanning, setScanning] = useState(false);
 
   const startCamera = async () => {
     try {
@@ -16,6 +17,23 @@ export default function VisionFeed() {
     } catch (err) {
       console.error("Camera access denied.", err);
     }
+  };
+
+  const captureFrame = () => {
+    if (!videoRef.current || !onAnalyze) return;
+    setScanning(true);
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    
+    canvas.toBlob((blob) => {
+      const file = new File([blob], `scan_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      onAnalyze({ type: 'file', file });
+      setTimeout(() => setScanning(false), 2000);
+    }, 'image/jpeg', 0.8);
   };
 
   const [coords, setCoords] = useState({ x: 42.1234, y: -71.5678 });
@@ -93,6 +111,39 @@ export default function VisionFeed() {
               opacity: 0.8
             }}
           />
+          
+          {/* Scan Overlay Effect */}
+          {scanning && (
+            <div style={{
+              position: 'absolute',
+              inset: '40px 0 0 0',
+              background: 'linear-gradient(transparent, rgba(0, 212, 255, 0.2), transparent)',
+              height: '20px',
+              width: '100%',
+              top: '40px',
+              animation: 'scan-move 1.5s linear infinite',
+              zIndex: 10,
+              pointerEvents: 'none'
+            }} />
+          )}
+
+          {/* Perception Scan Button */}
+          <button 
+            onClick={captureFrame}
+            disabled={scanning}
+            className="cmd-btn"
+            style={{
+              position: 'absolute',
+              top: '48px',
+              right: '8px',
+              fontSize: '7px',
+              padding: '2px 6px',
+              background: scanning ? 'rgba(255,0,0,0.2)' : 'rgba(0,212,255,0.1)',
+              zIndex: 20
+            }}
+          >
+            {scanning ? 'SCANNING...' : 'PERCEPTION SCAN'}
+          </button>
           {/* Targeting Reticle */}
           <div style={{
             position: 'absolute',

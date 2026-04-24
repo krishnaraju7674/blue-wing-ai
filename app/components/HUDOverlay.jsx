@@ -245,6 +245,7 @@ export default function HUDOverlay({ agentState, logs, response, isListening, is
   const [input, setInput] = useState('');
   const [metrics] = useState({ cpu: 34, mem: 52, net: 87 });
   const [showSeal, setShowSeal] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState('core'); // 'core', 'logs', 'systems'
   const inputRef = useRef(null);
   const status = LAYER_STATUS[agentState] || LAYER_STATUS.idle;
 
@@ -295,23 +296,39 @@ export default function HUDOverlay({ agentState, logs, response, isListening, is
         <div className="top-bar-inner">
           <div className="logo-title">BLUE WING</div>
           <div className="logo-subtitle">sovereign agentic entity</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '12px' }}>
-            <Clock />
-            <button onClick={onToggleVault} className="cmd-btn" style={{ fontSize: '8px', padding: '4px 10px' }}>ACCESS VAULT</button>
-            <button onClick={onToggleHelp} className="cmd-btn" style={{ fontSize: '8px', padding: '4px 10px', background: 'rgba(0, 212, 255, 0.1)' }}>PROTOCOL [HELP]</button>
+          
+          {/* Mobile Navigation Tabs */}
+          <div className="mobile-nav">
             <button 
-                onClick={() => onCommand('test audio')} 
-                className="cmd-btn" 
-                style={{ fontSize: '8px', padding: '4px 10px', background: 'rgba(255, 215, 0, 0.05)', color: '#ffd700' }}
+              onClick={() => setMobilePanel('logs')} 
+              className={`mobile-nav-btn ${mobilePanel === 'logs' ? 'active' : ''}`}
             >
-                AUDIO TEST
+              LOGS
             </button>
+            <button 
+              onClick={() => setMobilePanel('core')} 
+              className={`mobile-nav-btn ${mobilePanel === 'core' ? 'active' : ''}`}
+            >
+              CORE
+            </button>
+            <button 
+              onClick={() => setMobilePanel('systems')} 
+              className={`mobile-nav-btn ${mobilePanel === 'systems' ? 'active' : ''}`}
+            >
+              SYSTEMS
+            </button>
+          </div>
+
+          <div className="top-bar-controls">
+            <Clock />
+            <button onClick={onToggleVault} className="cmd-btn vault-btn">ACCESS VAULT</button>
+            <button onClick={onToggleHelp} className="cmd-btn help-btn">PROTOCOL [HELP]</button>
           </div>
         </div>
       </div>
 
       {/* ... Left Sidebar ... */}
-      <div className="left-sidebar glass-panel">
+      <div className={`left-sidebar glass-panel ${mobilePanel === 'logs' ? 'mobile-visible' : ''}`}>
         <BinaryStream />
         <div className="scan-line" />
         <div className="panel-header">
@@ -362,8 +379,8 @@ export default function HUDOverlay({ agentState, logs, response, isListening, is
       )}
 
       {/* ── Right Sidebar ── */}
-      <div className="right-sidebar">
-        <VisionFeed />
+      <div className={`right-sidebar ${mobilePanel === 'systems' ? 'mobile-visible' : ''}`}>
+        <VisionFeed onAnalyze={onCommand} />
 
         {/* Multi-Agent Cluster Status */}
         {agentState === 'split' && (
