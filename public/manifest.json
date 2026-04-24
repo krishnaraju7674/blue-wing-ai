@@ -1,12 +1,11 @@
 {
-  "name": "Blue Wing — Sovereign AI OS",
+  "name": "Blue Wing AI - Sovereign OS",
   "short_name": "Blue Wing",
-  "description": "Sovereign Agentic AI Operating System built by Krishna",
+  "description": "High-fidelity Sovereign AI Operating System and Digital Butler.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#030612",
-  "theme_color": "#0096ff",
-  "orientation": "any",
+  "background_color": "#020617",
+  "theme_color": "#020617",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -21,13 +20,17 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["productivity", "utilities"],
+  "orientation": "any",
   "shortcuts": [
     {
-      "name": "Open Blue Wing",
-      "short_name": "Launch",
-      "description": "Launch Blue Wing AI OS",
-      "url": "/"
+      "name": "Access Vault",
+      "url": "/?action=vault",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Initialize Protocol",
+      "url": "/?action=help",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     }
   ]
 }
