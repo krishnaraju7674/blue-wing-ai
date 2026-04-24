@@ -285,32 +285,38 @@ function ArcReactor({ agentState, isSpeaking, isAlert }) {
   useFrame((state) => {
     const time = state.clock.elapsedTime;
     if (groupRef.current) {
-      groupRef.current.rotation.z = time * 0.4;
+      groupRef.current.rotation.z = time * 0.3;
     }
     if (innerRef.current) {
-      innerRef.current.rotation.z = -time * 0.6;
+      innerRef.current.rotation.z = -time * 0.5;
     }
     if (coreRef.current) {
-      const s = 1 + Math.sin(time * 1.5) * 0.03 + (isSpeaking ? Math.sin(time * 10) * 0.03 : 0);
+      const s = 1 + Math.sin(time * 1.2) * 0.02 + (isSpeaking ? Math.sin(time * 8) * 0.02 : 0);
       coreRef.current.scale.set(s, s, s);
     }
   });
 
   return (
-    <group>
-      {/* Outer Structural Ring */}
+    <group scale={1.1}>
+      {/* Heavy Outer Industrial Ring */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[1.5, 0.08, 16, 100]} />
-        <meshStandardMaterial color="#111" roughness={0.1} metalness={1} />
+        <torusGeometry args={[1.5, 0.15, 24, 64]} />
+        <meshStandardMaterial color="#222" roughness={0.3} metalness={0.9} />
       </mesh>
       
-      {/* Glow Behind Segments */}
+      {/* Internal Housing Rim */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[1.5, 0.04, 8, 100]} />
-        <meshBasicMaterial color={reactorColor} transparent opacity={0.4} />
+        <torusGeometry args={[1.35, 0.05, 12, 64]} />
+        <meshStandardMaterial color="#333" roughness={0.5} metalness={0.8} />
       </mesh>
 
-      {/* Reactor Power Segments */}
+      {/* Recessed Glow Channel */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.05]}>
+        <torusGeometry args={[1.5, 0.02, 8, 64]} />
+        <meshBasicMaterial color={reactorColor} transparent opacity={0.2} />
+      </mesh>
+
+      {/* Thick Reactor Power Segments */}
       <group ref={groupRef}>
         {Array.from({ length: 10 }).map((_, i) => (
           <mesh 
@@ -318,45 +324,54 @@ function ArcReactor({ agentState, isSpeaking, isAlert }) {
             position={[Math.cos((i / 10) * Math.PI * 2) * 1.5, Math.sin((i / 10) * Math.PI * 2) * 1.5, 0]}
             rotation={[0, 0, (i / 10) * Math.PI * 2]}
           >
-            <boxGeometry args={[0.3, 0.5, 0.15]} />
+            <boxGeometry args={[0.4, 0.6, 0.3]} />
             <meshStandardMaterial 
-              color={reactorColor} 
+              color="#111"
+              roughness={0.2}
+              metalness={1}
               emissive={reactorColor} 
-              emissiveIntensity={isSpeaking ? 4 : 2} 
+              emissiveIntensity={isSpeaking ? 1.5 : 0.8} 
             />
           </mesh>
         ))}
       </group>
 
-      {/* Inner Rotating Support */}
+      {/* Inner Rotating Support (Thicker) */}
       <group ref={innerRef}>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.9, 0.03, 16, 100]} />
-          <meshBasicMaterial color={reactorColor} transparent opacity={0.6} />
+          <torusGeometry args={[0.85, 0.08, 16, 64]} />
+          <meshStandardMaterial color="#222" roughness={0.4} metalness={0.9} />
         </mesh>
-        {/* Spokes */}
-        {Array.from({ length: 3 }).map((_, i) => (
-          <mesh key={i} rotation={[0, 0, (i / 3) * Math.PI * 2]}>
-            <boxGeometry args={[1.8, 0.02, 0.02]} />
-            <meshBasicMaterial color={reactorColor} transparent opacity={0.3} />
+        {/* Heavy Spokes */}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <mesh key={i} rotation={[0, 0, (i / 4) * Math.PI * 2]}>
+            <boxGeometry args={[1.7, 0.06, 0.06]} />
+            <meshStandardMaterial color="#111" roughness={0.5} metalness={1} />
           </mesh>
         ))}
       </group>
 
-      {/* Central Core Energy Beam */}
-      <mesh ref={coreRef} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.45, 0.45, 0.25, 32]} />
-        <meshStandardMaterial 
-          color="#fff" 
-          emissive={reactorColor} 
-          emissiveIntensity={isSpeaking ? 8 : 4} 
-          transparent
-          opacity={0.95}
-        />
-      </mesh>
+      {/* Industrial Central Core */}
+      <group ref={coreRef}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.5, 0.5, 0.4, 32]} />
+          <meshStandardMaterial color="#050505" roughness={0.1} metalness={1} />
+        </mesh>
+        {/* Core Glow Element */}
+        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.05]}>
+          <cylinderGeometry args={[0.4, 0.4, 0.35, 32]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            emissive={reactorColor} 
+            emissiveIntensity={isSpeaking ? 4 : 2} 
+            transparent
+            opacity={0.9}
+          />
+        </mesh>
+      </group>
       
-      {/* Point Light for the surroundings */}
-      <pointLight color={reactorColor} intensity={isSpeaking ? 5 : 2} distance={12} decay={2} />
+      {/* Subtle Ambient Glow */}
+      <pointLight color={reactorColor} intensity={isSpeaking ? 2 : 0.8} distance={10} decay={2} />
     </group>
   );
 }
