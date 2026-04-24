@@ -379,7 +379,7 @@ html, body {
   top: 0; left: 0; right: 0;
   height: 40px;
   background: linear-gradient(180deg, rgba(0,150,255,0.06), transparent);
-  animation: scan-line 6s linear infinite;
+  animation: scan-line 12s linear infinite;
   pointer-events: none;
 }
 
@@ -788,9 +788,9 @@ html, body {
 @keyframes alert-flicker {
   0%, 100% { opacity: 1; }
   92% { opacity: 1; }
-  93% { opacity: 0.95; }
+  93% { opacity: 0.98; }
   94% { opacity: 1; }
-  95% { opacity: 0.98; }
+  95% { opacity: 0.99; }
   96% { opacity: 1; }
 }
 

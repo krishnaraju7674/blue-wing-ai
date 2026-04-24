@@ -266,53 +266,97 @@ function SplitSpheres({ isSpeaking, isAlert }) {
   );
 }
 
-/* ── Core Sphere ── */
-function CoreSphere({ agentState, isSpeaking, isAlert }) {
-  const meshRef = useRef();
-  const lightRef = useRef();
+/* ── Arc Reactor Core ── */
+function ArcReactor({ agentState, isSpeaking, isAlert }) {
+  const groupRef = useRef();
+  const innerRef = useRef();
+  const coreRef = useRef();
 
-  const coreColor = useMemo(() => {
+  const reactorColor = useMemo(() => {
     if (isAlert) return '#ff0033';
     switch (agentState) {
       case 'processing': return '#7c6cf0';
       case 'listening': return '#00e676';
       case 'sleeping': return '#1a1a3e';
-      default: return '#0088ff';
+      default: return '#00d4ff';
     }
-  }, [agentState]);
+  }, [agentState, isAlert]);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      const breathe = Math.sin(state.clock.elapsedTime * 0.8) * 0.05;
-      const jitter = isSpeaking ? Math.sin(state.clock.elapsedTime * 40) * 0.02 : 0;
-      const s = agentState === 'sleeping' ? 0.8 : 1 + breathe + jitter;
-      meshRef.current.scale.lerp(new THREE.Vector3(s, s, s), 0.03);
+    const time = state.clock.elapsedTime;
+    if (groupRef.current) {
+      groupRef.current.rotation.z = time * 0.4;
     }
-    if (lightRef.current) {
-      const pulse = (isSpeaking ? 4 : 2) + Math.sin(state.clock.elapsedTime * (isSpeaking ? 20 : 1.2)) * 0.8;
-      lightRef.current.intensity = agentState === 'sleeping' ? 0.3 : pulse;
+    if (innerRef.current) {
+      innerRef.current.rotation.z = -time * 0.6;
+    }
+    if (coreRef.current) {
+      const s = 1 + Math.sin(time * 1.5) * 0.03 + (isSpeaking ? Math.sin(time * 10) * 0.03 : 0);
+      coreRef.current.scale.set(s, s, s);
     }
   });
 
   return (
     <group>
-      <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.3}>
-        <mesh ref={meshRef}>
-          <sphereGeometry args={[1.3, 64, 64]} />
-          <MeshDistortMaterial
-            color={coreColor}
-            emissive={coreColor}
-            emissiveIntensity={isSpeaking ? 3 : agentState === 'processing' ? 2.5 : 1.2}
-            distort={isSpeaking ? 0.6 : 0.3}
-            speed={isSpeaking ? 10 : 2}
-            roughness={0.1}
-            metalness={0.85}
-            transparent
-            opacity={agentState === 'sleeping' ? 0.4 : 0.9}
-          />
+      {/* Outer Structural Ring */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.5, 0.08, 16, 100]} />
+        <meshStandardMaterial color="#111" roughness={0.1} metalness={1} />
+      </mesh>
+      
+      {/* Glow Behind Segments */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.5, 0.04, 8, 100]} />
+        <meshBasicMaterial color={reactorColor} transparent opacity={0.4} />
+      </mesh>
+
+      {/* Reactor Power Segments */}
+      <group ref={groupRef}>
+        {Array.from({ length: 10 }).map((_, i) => (
+          <mesh 
+            key={i} 
+            position={[Math.cos((i / 10) * Math.PI * 2) * 1.5, Math.sin((i / 10) * Math.PI * 2) * 1.5, 0]}
+            rotation={[0, 0, (i / 10) * Math.PI * 2]}
+          >
+            <boxGeometry args={[0.3, 0.5, 0.15]} />
+            <meshStandardMaterial 
+              color={reactorColor} 
+              emissive={reactorColor} 
+              emissiveIntensity={isSpeaking ? 4 : 2} 
+            />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Inner Rotating Support */}
+      <group ref={innerRef}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.9, 0.03, 16, 100]} />
+          <meshBasicMaterial color={reactorColor} transparent opacity={0.6} />
         </mesh>
-      </Float>
-      <pointLight ref={lightRef} color={coreColor} intensity={2} distance={15} decay={2} />
+        {/* Spokes */}
+        {Array.from({ length: 3 }).map((_, i) => (
+          <mesh key={i} rotation={[0, 0, (i / 3) * Math.PI * 2]}>
+            <boxGeometry args={[1.8, 0.02, 0.02]} />
+            <meshBasicMaterial color={reactorColor} transparent opacity={0.3} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Central Core Energy Beam */}
+      <mesh ref={coreRef} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.45, 0.45, 0.25, 32]} />
+        <meshStandardMaterial 
+          color="#fff" 
+          emissive={reactorColor} 
+          emissiveIntensity={isSpeaking ? 8 : 4} 
+          transparent
+          opacity={0.95}
+        />
+      </mesh>
+      
+      {/* Point Light for the surroundings */}
+      <pointLight color={reactorColor} intensity={isSpeaking ? 5 : 2} distance={12} decay={2} />
     </group>
   );
 }
@@ -413,7 +457,7 @@ export default function Scene3D({ agentState, isSpeaking, godMode, isAlert }) {
       {agentState === 'split' ? (
         <SplitSpheres isSpeaking={isSpeaking} isAlert={isAlert} />
       ) : (
-        <CoreSphere agentState={agentState} isSpeaking={isSpeaking} isAlert={isAlert} />
+        <ArcReactor agentState={agentState} isSpeaking={isSpeaking} isAlert={isAlert} />
       )}
 
       {/* Wireframe Shells */}
