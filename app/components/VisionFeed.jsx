@@ -2,6 +2,64 @@
 
 import { useRef, useEffect, useState } from 'react';
 
+function ObjectDetectionOverlay({ active }) {
+  const [objects, setObjects] = useState([
+    { id: 1, label: 'HUMAN', top: 30, left: 20, width: 40, height: 60, threat: 'LOW' },
+    { id: 2, label: 'HARDWARE', top: 10, left: 70, width: 20, height: 20, threat: 'N/A' },
+  ]);
+
+  useEffect(() => {
+    if (!active) return;
+    const iv = setInterval(() => {
+      setObjects(prev => prev.map(obj => ({
+        ...obj,
+        top: Math.min(80, Math.max(5, obj.top + (Math.random() - 0.5) * 2)),
+        left: Math.min(80, Math.max(5, obj.left + (Math.random() - 0.5) * 2)),
+      })));
+    }, 100);
+    return () => clearInterval(iv);
+  }, [active]);
+
+  if (!active) return null;
+
+  return (
+    <div style={{ position: 'absolute', inset: '40px 0 0 0', pointerEvents: 'none', overflow: 'hidden' }}>
+      {objects.map(obj => (
+        <div key={obj.id} style={{
+          position: 'absolute',
+          top: `${obj.top}%`,
+          left: `${obj.left}%`,
+          width: `${obj.width}%`,
+          height: `${obj.height}%`,
+          border: '1px solid var(--accent-cyan)',
+          transition: 'all 0.1s linear',
+          opacity: 0.4
+        }}>
+          <div style={{
+            position: 'absolute', top: '-14px', left: '0',
+            background: 'var(--accent-cyan)', color: '#000',
+            fontSize: '6px', fontWeight: 'bold', padding: '1px 4px',
+            whiteSpace: 'nowrap'
+          }}>
+            {obj.label} | THREAT: {obj.threat}
+          </div>
+          <div style={{
+            position: 'absolute', bottom: '-10px', right: '0',
+            color: 'var(--accent-cyan)', fontSize: '5px', opacity: 0.8
+          }}>
+            DIST: {(Math.random() * 5 + 2).toFixed(1)}m
+          </div>
+        </div>
+      ))}
+      <div className="scanning-bar" style={{
+        position: 'absolute', top: 0, left: 0, width: '100%', height: '2px',
+        background: 'rgba(0, 212, 255, 0.5)', boxShadow: '0 0 15px var(--accent-cyan)',
+        animation: 'scan-move 4s linear infinite'
+      }} />
+    </div>
+  );
+}
+
 export default function VisionFeed({ onAnalyze, isSeeThrough, autoScan = false }) {
   const videoRef = useRef(null);
   const [active, setActive] = useState(false);
@@ -128,6 +186,7 @@ export default function VisionFeed({ onAnalyze, isSeeThrough, autoScan = false }
               objectFit: 'cover'
             }}
           />
+          <ObjectDetectionOverlay active={active} />
           
           {/* Scan Overlay Effect */}
           {scanning && (

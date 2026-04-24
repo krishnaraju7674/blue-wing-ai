@@ -88,6 +88,16 @@ body::before {
   95% { opacity: 0.5; transform: skewX(2deg); }
   100% { opacity: 0.8; }
 }
+@keyframes scan-move {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+@keyframes holo-flicker {
+  0%, 100% { opacity: 0.95; }
+  33% { opacity: 0.88; }
+  66% { opacity: 1; }
+  85% { opacity: 0.9; }
+}
 
 .vision-interference {
   animation: interference 4s infinite;

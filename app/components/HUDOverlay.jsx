@@ -276,7 +276,18 @@ export default function HUDOverlay({
   const [input, setInput] = useState('');
   const [metrics] = useState({ cpu: 34, mem: 52, net: 87 });
   const [showSeal, setShowSeal] = useState(false);
-  const [mobilePanel, setMobilePanel] = useState('core'); // 'core', 'logs', 'systems'
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 20;
+      const y = (e.clientY / window.innerHeight - 0.5) * 20;
+      setParallax({ x, y });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   const inputRef = useRef(null);
   const status = LAYER_STATUS[agentState] || LAYER_STATUS.idle;
 
@@ -321,7 +332,11 @@ export default function HUDOverlay({
   };
 
   return (
-    <div className="hud-overlay">
+    <div className={`hud-overlay ${isAlert ? 'alert-mode' : ''}`} style={{ 
+      pointerEvents: 'none',
+      transform: `perspective(1000px) rotateX(${-parallax.y * 0.05}deg) rotateY(${parallax.x * 0.05}deg) translateZ(0)`,
+      transition: 'transform 0.1s ease-out'
+    }}>
       {/* ... Top Bar ... */}
       <div className="top-bar">
         <div className="top-bar-inner">
