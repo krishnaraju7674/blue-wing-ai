@@ -5,14 +5,26 @@ import { deployContract } from '../../../lib/web3';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Appwrite setup for server-side memory
-const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1')
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '');
-
-const db = new Databases(client);
+// Appwrite setup for server-side memory — lazy init, safe when env vars are absent
 const DATABASE_ID = 'blue_wing_main';
 const MEMORY_COLLECTION = 'memory';
+
+let _db = null;
+function getDb() {
+  if (_db) return _db;
+  const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+  if (!projectId) return null;
+  try {
+    const client = new Client()
+      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1')
+      .setProject(projectId);
+    if (process.env.APPWRITE_API_KEY) client.setKey(process.env.APPWRITE_API_KEY);
+    _db = new Databases(client);
+    return _db;
+  } catch (e) {
+    return null;
+  }
+}
 
 // In-memory conversation history (persists within a server session)
 let conversationHistory = [];
@@ -20,22 +32,22 @@ const MAX_HISTORY = 30;
 
 async function syncHistory() {
   if (conversationHistory.length > 0) return;
+  const db = getDb();
+  if (!db) return;
   try {
     const response = await db.listDocuments(DATABASE_ID, MEMORY_COLLECTION, [
       Query.orderDesc('timestamp'),
       Query.limit(20),
     ]);
-    
-    // Reverse to get chronological order and format for Gemini
     conversationHistory = response.documents.reverse().map(doc => ({
       role: doc.role === 'model' ? 'model' : 'user',
       parts: [{ text: doc.content }]
     }));
-    console.log(`Synced ${conversationHistory.length} messages from Appwrite.`);
   } catch (err) {
     console.warn('History sync failed:', err.message);
   }
 }
+
 
 function makeHash() {
   return `BW-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
