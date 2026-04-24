@@ -398,12 +398,32 @@ export async function POST(req) {
             text: `${app.name} authorized and active.`,
             hash: hash(), type: 'local', success: true
           }));
-        }
+      const cmd = isClose ? (app.close || `taskkill /IM ${t}.exe /F`) : app.open;
+      await execAsync(cmd);
+      return NextResponse.json({ 
+        text: isClose ? `${app.name} terminated.` : `Launching ${app.name}, Sir.`, 
+        hash: hash(), success: true 
       });
-    });
+    }
 
+    // 4. Web Fallback
+    if (WEBS[t] && !isClose) {
+      return NextResponse.json({ text: `Directing to ${t.toUpperCase()}, Sir.`, hash: hash(), success: true, type: 'web', url: WEBS[t] });
+    }
+
+    // 5. Direct Execution Fallback (God Mode)
+    if (!isClose) {
+      try {
+        await execAsync(`start ${t}`);
+        return NextResponse.json({ text: `Manual override: Initializing ${t}, Sir.`, hash: hash(), success: true });
+      } catch {
+        return NextResponse.json({ text: `I couldn't find ${t} in my registry or system path, Sir.`, hash: hash(), success: false });
+      }
+    }
+
+    return NextResponse.json({ text: `Protocol for ${t} is not defined, Sir.`, hash: hash(), success: false });
   } catch (error) {
-    console.error('Blue Wing: Launch API Error:', error);
-    return NextResponse.json({ text: "Launch protocol error.", hash: hash(), type: 'error', success: false }, { status: 500 });
+    console.error('Launch Error:', error);
+    return NextResponse.json({ text: `Communication failure: ${error.message}`, hash: hash(), success: false });
   }
 }
