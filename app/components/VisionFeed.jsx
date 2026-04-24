@@ -41,7 +41,7 @@ export default function VisionFeed({ onAnalyze, isSeeThrough, autoScan = false }
     
     canvas.toBlob((blob) => {
       const file = new File([blob], `scan_${Date.now()}.jpg`, { type: 'image/jpeg' });
-      onAnalyze({ type: 'file', file });
+      onAnalyze({ type: 'file', file, isAuto });
       setTimeout(() => setScanning(false), 2000);
     }, 'image/jpeg', 0.8);
   };

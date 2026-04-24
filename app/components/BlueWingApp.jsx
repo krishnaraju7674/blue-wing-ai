@@ -57,6 +57,20 @@ export default function BlueWingApp() {
   const lastVoiceRequestRef = useRef(0);
   const notifyRef = useRef(null);
 
+  // Mobile Voice Unlock
+  useEffect(() => {
+    const unlock = () => {
+      const u = new SpeechSynthesisUtterance('');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+      console.log("Blue Wing: Perception layer unlocked for mobile.");
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('click', unlock);
+    };
+    document.addEventListener('touchstart', unlock);
+    document.addEventListener('click', unlock);
+  }, []);
+
   const now = () => new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   // System Boot Sequence — Local auth, no cloud dependency
@@ -163,13 +177,20 @@ export default function BlueWingApp() {
 
   const handleCommand = useCallback(async (cmd) => {
     if (!cmd) return;
+    
+    // Proactive Voice Unlock (ensure speech is active for autonomous reporting)
+    if (!isSpeaking && window.speechSynthesis.paused) window.speechSynthesis.resume();
 
     // ── File Analysis ──
     if (typeof cmd === 'object' && cmd.type === 'file') {
-      const file = cmd.file;
+      const { file, isAuto } = cmd;
+      const prompt = isAuto 
+        ? "PROACTIVE SENSORY UPDATE: Analyze this capture. Report anything interesting or say 'Environment remains secure, Sir.' briefly."
+        : `Please analyze this file: ${file.name}`;
+      
       setAgentState('processing');
-      setResponse(`Analyzing ${file.name}...`);
-      speak(`Analyzing your file, Sir.`);
+      setResponse(isAuto ? "Observing environment..." : `Analyzing ${file.name}...`);
+      if (!isAuto) speak(`Analyzing your file, Sir.`);
       
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -181,7 +202,7 @@ export default function BlueWingApp() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              prompt: `Please analyze this file: ${file.name}`, 
+              prompt: prompt, 
               persona,
               file: {
                 data: base64Data,
